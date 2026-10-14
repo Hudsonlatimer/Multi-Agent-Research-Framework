@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 from research_team.llm import ChatHandle, invoke_structured
+from research_team.report import claim_supported
 from research_team.state import (
     Claim,
     Critique,
@@ -23,6 +24,11 @@ RESEARCHER_SYSTEM = (
 
 MAX_PLAN_QUERIES = 4
 MAX_REVISION_QUERIES = 3
+
+
+def _dropped_label(count: int) -> str:
+    noun = "claim" if count == 1 else "claims"
+    return f"{count} ungrounded {noun}"
 
 
 def utc_now() -> str:
@@ -64,18 +70,26 @@ def assign_sources(
     return batch
 
 
-def claims_from_extraction(extraction: Extraction, allowed_ids: set[str]) -> list[Claim]:
+def claims_from_extraction(
+    extraction: Extraction, allowed: dict[str, Source]
+) -> tuple[list[Claim], int]:
     claims: list[Claim] = []
+    dropped = 0
     for extracted in extraction.claims:
         text = extracted.text.strip()
-        ids = []
+        ids: list[str] = []
         for source_id in extracted.source_ids:
             normalized = normalize_source_id(source_id)
-            if normalized in allowed_ids and normalized not in ids:
+            if normalized in allowed and normalized not in ids:
                 ids.append(normalized)
-        if text and ids:
-            claims.append(Claim(text=text, source_ids=ids))
-    return claims
+        if not text or not ids:
+            continue
+        excerpts = [allowed[source_id].excerpt for source_id in ids]
+        if not claim_supported(text, excerpts):
+            dropped += 1
+            continue
+        claims.append(Claim(text=text, source_ids=ids))
+    return claims, dropped
 
 
 def collect_sources(handle: ChatHandle, state: dict, search: SearchService) -> dict:
@@ -92,14 +106,17 @@ def collect_sources(handle: ChatHandle, state: dict, search: SearchService) -> d
         batch = assign_sources(pages, existing, new_sources)
         if not batch:
             continue
-        allowed = {source.id for source in batch}
+        allowed = {source.id: source for source in batch}
         extraction = invoke_structured(
             handle,
             Extraction,
             RESEARCHER_SYSTEM,
             f"Topic: {state['topic']}\nSearch query: {query}\n\nSources:\n{format_sources(batch)}",
         )
-        new_claims.extend(claims_from_extraction(extraction, allowed))
+        grounded, dropped = claims_from_extraction(extraction, allowed)
+        if dropped:
+            emit(f"Dropped {_dropped_label(dropped)}.")
+        new_claims.extend(grounded)
     return {
         "revision": revision,
         "sources": [source.model_dump() for source in new_sources],

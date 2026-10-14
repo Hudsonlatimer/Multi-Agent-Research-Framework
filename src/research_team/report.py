@@ -5,10 +5,62 @@ import re
 from research_team.state import Report, Source
 
 SOURCE_MARKER = re.compile(r"\[(S\d+)\]")
+_WORD = re.compile(r"[a-z0-9]+")
+_STOP = frozenset(
+    {
+        "that",
+        "this",
+        "with",
+        "from",
+        "have",
+        "been",
+        "were",
+        "their",
+        "about",
+        "which",
+        "would",
+        "could",
+        "should",
+        "into",
+        "than",
+        "then",
+        "also",
+        "only",
+        "after",
+        "before",
+        "where",
+        "when",
+        "what",
+        "your",
+        "they",
+        "them",
+        "some",
+        "such",
+        "other",
+        "more",
+        "most",
+        "each",
+        "both",
+        "does",
+    }
+)
+
+
+def distinctive_words(text: str) -> set[str]:
+    return {word for word in _WORD.findall(text.lower()) if len(word) > 3 and word not in _STOP}
+
+
+def claim_supported(text: str, excerpts: list[str]) -> bool:
+    """A claim is supported when most of its distinctive words appear in the excerpts."""
+    words = distinctive_words(text)
+    if len(words) < 2:
+        return False
+    overlap = words & distinctive_words(" ".join(excerpts))
+    return len(overlap) >= 2 and len(overlap) * 2 >= len(words)
 
 
 def validate_citations(report: Report, sources: list[Source]) -> list[str]:
-    known = {source.id for source in sources}
+    known = {source.id: source for source in sources}
     errors: list[str] = []
     for label, text in (("summary", report.summary), ("limitations", report.limitations)):
         for source_id in SOURCE_MARKER.findall(text):
@@ -19,14 +71,19 @@ def validate_citations(report: Report, sources: list[Source]) -> list[str]:
             if not claim.source_ids:
                 errors.append(f"Claim has no sources: {claim.text}")
                 continue
-            for source_id in claim.source_ids:
-                if source_id not in known:
-                    errors.append(f"Unknown source id {source_id} on claim: {claim.text}")
+            missing = [source_id for source_id in claim.source_ids if source_id not in known]
+            for source_id in missing:
+                errors.append(f"Unknown source id {source_id} on claim: {claim.text}")
+            if missing:
+                continue
+            excerpts = [known[source_id].excerpt for source_id in claim.source_ids]
+            if not claim_supported(claim.text, excerpts):
+                errors.append(f"Claim is not supported by its sources: {claim.text}")
     return errors
 
 
 def cited_source_ids(report: Report, sources: list[Source]) -> list[str]:
-    known = {source.id for source in sources}
+    known = set(source.id for source in sources)
     ordered: list[str] = []
 
     def add(source_id: str) -> None:

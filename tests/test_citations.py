@@ -1,10 +1,11 @@
+from research_team.agents.researcher import claims_from_extraction
 from research_team.report import (
     cited_source_ids,
     integrity_line,
     render_markdown,
     validate_citations,
 )
-from research_team.state import Claim, Report, Section, Source
+from research_team.state import Claim, ExtractedClaim, Extraction, Report, Section, Source
 
 
 def _sources() -> list[Source]:
@@ -71,3 +72,29 @@ def test_bibliography_lists_only_cited_sources():
     assert (
         integrity_line(_report(), _sources()) == "> 1 source cited · 1 claim · 0 unknown citations"
     )
+
+
+def test_real_source_id_cannot_carry_an_unsupported_claim():
+    report = _report(
+        sections=[
+            Section(
+                heading="Definition",
+                claims=[Claim(text="Quantum computers break this structure.", source_ids=["S1"])],
+            )
+        ]
+    )
+    errors = validate_citations(report, _sources())
+    assert any("not supported" in error for error in errors)
+
+
+def test_extractor_drops_claims_the_excerpt_does_not_say():
+    allowed = {source.id: source for source in _sources()}
+    extraction = Extraction(
+        claims=[
+            ExtractedClaim(text="A hash map stores keys by hash.", source_ids=["s1"]),
+            ExtractedClaim(text="Quantum computers break this structure.", source_ids=["S1"]),
+        ]
+    )
+    claims, dropped = claims_from_extraction(extraction, allowed)
+    assert dropped == 1
+    assert [claim.text for claim in claims] == ["A hash map stores keys by hash."]

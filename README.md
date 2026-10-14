@@ -45,7 +45,7 @@ The full file is [examples/bloom-filter.md](examples/bloom-filter.md). [examples
 
 The demo's excerpt is bundled so the command can run anywhere. The Wikipedia URL is real. A normal run searches DuckDuckGo and arXiv, fetches the pages, and calls the model you configure.
 
-The check fails unknown ids such as `[S99]`. It does not prove a sentence is true. A model can still pin a real source id on a claim the page does not support. The critic sees the excerpts. The gate sees the ids.
+The check fails unknown ids such as `[S99]`. It also rejects a claim when most of its distinctive words do not appear in the cited excerpt. A sentence can still reuse a page's words and mean something else. The gate does not prove the sentence is true.
 
 ## Run it on your topic
 

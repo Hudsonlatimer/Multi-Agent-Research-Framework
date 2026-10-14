@@ -8,6 +8,7 @@ WRITER_SYSTEM = (
     "You write a technical report using only the claims and sources provided. "
     "Every factual statement in a section must be one of the supplied claims and must keep that claim's source ids. "
     "Do not invent sources, numbers, or citations. "
+    "Keep the wording of each claim close to its source excerpt. "
     "The summary and limitations may cite only known source ids. "
     "Use limitations to state what the sources do not cover."
 )
