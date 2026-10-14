@@ -1,0 +1,111 @@
+{
+  "topic": "How a Bloom filter rejects a missing key",
+  "provider": "demo",
+  "models": {
+    "planner": "offline-demo",
+    "researcher": "offline-demo",
+    "critic": "offline-demo",
+    "writer": "offline-demo"
+  },
+  "plan": {
+    "title": "How a Bloom filter rejects a missing key",
+    "sections": [
+      "Membership",
+      "False results"
+    ],
+    "search_queries": [
+      "Bloom filter membership test"
+    ]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "title": "Bloom filter",
+      "url": "https://en.wikipedia.org/wiki/Bloom_filter",
+      "retrieved_at": "2026-10-14T01:20:23+00:00",
+      "excerpt": "A Bloom filter is a space-efficient probabilistic data structure, conceived by Burton Howard Bloom in 1970, that is used to test whether an element is a member of a set. False positive matches are possible, but false negatives are not."
+    }
+  ],
+  "claims": [
+    {
+      "text": "A Bloom filter tests whether an element is a member of a set.",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "text": "False positive matches are possible, but false negatives are not.",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "text": "Burton Howard Bloom conceived the structure in 1970.",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "text": "A Bloom filter tests whether an element is a member of a set.",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "text": "False positive matches are possible, but false negatives are not.",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "text": "Burton Howard Bloom conceived the structure in 1970.",
+      "source_ids": [
+        "S1"
+      ]
+    }
+  ],
+  "critique": {
+    "verdict": "pass",
+    "missing_sections": [],
+    "search_queries": [],
+    "notes": "The membership and false-result claims are sourced."
+  },
+  "report": {
+    "title": "How a Bloom filter rejects a missing key",
+    "summary": "A Bloom filter tests set membership. It can say a key is definitely absent. False positives are possible, but false negatives are not. [S1]",
+    "sections": [
+      {
+        "heading": "Membership",
+        "claims": [
+          {
+            "text": "A Bloom filter tests whether an element is a member of a set.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "False results",
+        "claims": [
+          {
+            "text": "False positive matches are possible, but false negatives are not.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Burton Howard Bloom conceived the structure in 1970.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ]
+      }
+    ],
+    "limitations": "The source does not give the false-positive rate formula or the bit-array layout."
+  },
+  "citation_errors": [],
+  "revision": 1,
+  "write_attempts": 2
+}
