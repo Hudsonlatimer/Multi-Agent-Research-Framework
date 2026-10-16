@@ -3,6 +3,7 @@ from research_team.report import (
     cited_source_ids,
     integrity_line,
     render_markdown,
+    supporting_quote,
     validate_citations,
 )
 from research_team.state import Claim, ExtractedClaim, Extraction, Report, Section, Source
@@ -70,7 +71,23 @@ def test_bibliography_lists_only_cited_sources():
     assert cited_source_ids(_report(), _sources()) == ["S1"]
     assert "[S1]" in markdown
     assert (
-        integrity_line(_report(), _sources()) == "> 1 source cited · 1 claim · 0 unknown citations"
+        integrity_line(_report(), _sources())
+        == "> 1 source cited · 1 claim · 1 quote · 0 unknown citations"
+    )
+
+
+def test_quote_is_copied_from_the_excerpt():
+    quote = supporting_quote("A hash map stores keys by hash.", ["A hash map stores keys."])
+    assert quote == "A hash map stores keys."
+    assert quote in _sources()[0].excerpt
+    markdown = render_markdown(_report(), _sources())
+    assert "> A hash map stores keys." in markdown
+
+
+def test_quote_is_absent_when_no_sentence_overlaps():
+    assert (
+        supporting_quote("Quantum computers break this structure.", ["A hash map stores keys."])
+        is None
     )
 
 

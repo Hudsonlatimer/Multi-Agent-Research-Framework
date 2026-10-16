@@ -45,6 +45,8 @@ def test_demo_rejects_an_invented_citation_then_writes_the_report(tmp_path, caps
     assert "https://en.wikipedia.org/wiki/Bloom_filter" in report
     assert "[S99]" not in report
     assert "0 unknown citations" in report
+    assert "3 quotes" in report
+    assert "> False positive matches are possible, but false negatives are not." in report
 
 
 def test_cli_rejects_a_blank_topic(capsys):

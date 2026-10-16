@@ -26,7 +26,7 @@ examples/bloom-filter.md
 ```markdown
 # How a Bloom filter rejects a missing key
 
-> 1 source cited · 3 claims · 0 unknown citations
+> 1 source cited · 3 claims · 3 quotes · 0 unknown citations
 
 A Bloom filter tests set membership. It can say a key is definitely absent.
 False positives are possible, but false negatives are not. [S1]
@@ -34,7 +34,9 @@ False positives are possible, but false negatives are not. [S1]
 ## False results
 
 - False positive matches are possible, but false negatives are not. [S1]
+  > False positive matches are possible, but false negatives are not.
 - Burton Howard Bloom conceived the structure in 1970. [S1]
+  > A Bloom filter is a space-efficient probabilistic data structure, conceived by Burton Howard Bloom in 1970, that is used to test whether an element is a member of a set.
 
 ## Bibliography
 
@@ -45,7 +47,7 @@ The full file is [examples/bloom-filter.md](examples/bloom-filter.md). [examples
 
 The demo's excerpt is bundled so the command can run anywhere. The Wikipedia URL is real. A normal run searches DuckDuckGo and arXiv, fetches the pages, and calls the model you configure.
 
-The check fails unknown ids such as `[S99]`. It also rejects a claim when most of its distinctive words do not appear in the cited excerpt. A sentence can still reuse a page's words and mean something else. The gate does not prove the sentence is true.
+The check fails unknown ids such as `[S99]`. It also rejects a claim when most of its distinctive words do not appear in the cited excerpt. Under each claim that passes, the report prints one sentence copied from that excerpt. The model does not write the quoted line. A sentence can still reuse a page's words and mean something else. The gate does not prove the sentence is true.
 
 ## Run it on your topic
 

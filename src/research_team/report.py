@@ -59,6 +59,27 @@ def claim_supported(text: str, excerpts: list[str]) -> bool:
     return len(overlap) >= 2 and len(overlap) * 2 >= len(words)
 
 
+def supporting_quote(text: str, excerpts: list[str]) -> str | None:
+    """Return a sentence copied from the excerpts, not a sentence written by the model."""
+    words = distinctive_words(text)
+    best = ""
+    best_score = 0
+    for excerpt in excerpts:
+        for sentence in _sentences(excerpt):
+            overlap = len(words & distinctive_words(sentence))
+            if overlap > best_score:
+                best_score = overlap
+                best = sentence
+    if best_score < 2:
+        return None
+    return best
+
+
+def _sentences(excerpt: str) -> list[str]:
+    parts = re.split(r"(?<=[.!?])\s+", " ".join(excerpt.split()))
+    return [part.strip() for part in parts if part.strip()]
+
+
 def validate_citations(report: Report, sources: list[Source]) -> list[str]:
     known = {source.id: source for source in sources}
     errors: list[str] = []
@@ -108,11 +129,25 @@ def _counted(count: int, word: str) -> str:
 def integrity_line(report: Report, sources: list[Source]) -> str:
     claims = sum(len(section.claims) for section in report.sections)
     cited = len(cited_source_ids(report, sources))
+    quotes = _quote_count(report, sources)
     unknown = len(validate_citations(report, sources))
     return (
         f"> {_counted(cited, 'source')} cited · {_counted(claims, 'claim')} · "
-        f"{_counted(unknown, 'unknown citation')}"
+        f"{_counted(quotes, 'quote')} · {_counted(unknown, 'unknown citation')}"
     )
+
+
+def _quote_count(report: Report, sources: list[Source]) -> int:
+    by_id = {source.id: source for source in sources}
+    count = 0
+    for section in report.sections:
+        for claim in section.claims:
+            excerpts = [
+                by_id[source_id].excerpt for source_id in claim.source_ids if source_id in by_id
+            ]
+            if supporting_quote(claim.text, excerpts):
+                count += 1
+    return count
 
 
 def render_markdown(report: Report, sources: list[Source]) -> str:
@@ -132,6 +167,12 @@ def render_markdown(report: Report, sources: list[Source]) -> str:
             markers = "".join(f"[{source_id}]" for source_id in claim.source_ids)
             suffix = f" {markers}" if markers else ""
             lines.append(f"- {claim.text.strip()}{suffix}")
+            excerpts = [
+                by_id[source_id].excerpt for source_id in claim.source_ids if source_id in by_id
+            ]
+            quote = supporting_quote(claim.text, excerpts)
+            if quote:
+                lines.append(f"  > {quote}")
         lines.append("")
     lines.extend(["## Limitations", "", report.limitations.strip(), "", "## Bibliography", ""])
     cited = cited_source_ids(report, sources)
